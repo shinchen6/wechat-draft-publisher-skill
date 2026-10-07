@@ -8,7 +8,7 @@ metadata: {"openclaw":{"emoji":"📤"}}
 
 # WeChat Draft Publisher (Cloud)
 
-一个动作：`article.md + cover.png + 标题` → relay → 公众号草稿箱。
+一个动作：`article.md + 封面图 + 标题` → relay → 公众号草稿箱。支持图文（news，默认）与贴图（newspic）两种类型。
 
 **默认 dry-run**（不真发，只本地转 HTML + 跑流程 + 写 mock media_id）。**真发必须显式加 `--real`**——防止自动化测试时误推到用户草稿箱。
 
@@ -51,9 +51,11 @@ relay 跑在云托管，默认公网地址是平台生成的**默认域名**（�
 
 | 参数 | 必填 | 说明 |
 |---|---|---|
-| `article_path` `cover_path` | ✓ | markdown + PNG |
+| `article_path` `cover_path` | ✓ | markdown + PNG（贴图模式不需要 cover） |
 | `titles_md_path` \| `title_path` | 二选一 | 候选标题文件 / 已选标题文件 |
 | `--real` | 选 | **加这个才真发**，否则 dry-run |
+| `--type` | 选 | `news`=图文（默认，行为同旧版）；`newspic`=贴图 |
+| `--images` | newspic 必填 | 贴图用：图片路径，可给目录（按文件名排序）/ 逗号分隔 / 多个参数，最多 20 张 |
 | `--cloud-url` `--cloud-key` | 选 | 覆盖注入的 relay 地址/密钥 |
 | `covered_md_path` `covered_line` | 选 | 成功后追加去重 |
 | `feishu_chat_id` | 选 | 真发成功后才发飞书（best-effort） |
@@ -73,9 +75,12 @@ python scripts/publish_script.py --article X.md --cover Y.png --titles-md T.md
 
 # 2) 真发（推荐先 1) 验证后再 2)）
 python scripts/publish_script.py --real --article X.md --cover Y.png --titles-md T.md
+
+# 3) 贴图（newspic）：首张图即封面，不需要 --cover，正文自动转纯文本
+python scripts/publish_script.py --real --article X.md --titles-md T.md --type newspic --images img/
 ```
 
-**正文插图怎么写**：在 `article.md` 正常用 markdown 图片语法，脚本自动扫描、本地转 HTML、经 relay 上传。
+**正文插图怎么写**：在 `article.md` 正常用 markdown 图片语法，脚本自动扫描、本地转 HTML、经 relay 上传。贴图模式不支持 HTML 与正文插图，正文只保留纯文本。
 
 ```markdown
 ## 一段说明
@@ -124,6 +129,7 @@ python scripts/publish_script.py --diagnose comments --diag-id <msg_data_id>  # 
 
 ## 流程（--real 时）
 
+图文（news，默认）：
 1. **校验**：`article` / `cover` / `titles_md|title_file` 文件存在；`run_dir` 自动 `makedirs`
 2. **选标题**：titles.md 解析第 1 个 `1.` / `1、` / `1)` 候选；或直读 title.txt
 3. **字节**：UTF-8 ≤64；超了**报错不截断**
@@ -133,6 +139,8 @@ python scripts/publish_script.py --diagnose comments --diag-id <msg_data_id>  # 
 7. **上传封面**：POST relay `/material` → 拿到 `thumb_media_id`
 8. **建草稿**：标题 + HTML + `thumb_media_id` POST relay `/draft` → 返回 `media_id`
 9. **写 publish_result.json**
+
+贴图（newspic）：`--images` 每张图 POST relay `/material` → 按顺序拿永久 `media_id` → 正文转纯文本（去图片/代码块/强调）→ `article_type=newspic` + `image_media_ids` POST relay `/draft`。
 
 ## 错误码
 
