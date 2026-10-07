@@ -55,7 +55,13 @@ python scripts/publish_script.py --diagnose draft --diag-id <media_id>   # 回�
 
 ## 流程（--real 时）
 
+图文（news）：
 1. `md2wechat` 把 Markdown 转成微信图文 HTML（图片引用先留占位）
 2. 每张正文插图经 relay `/material` 上传 → 换回 mmbiz 链接，回填 HTML
 3. 封面经 relay `/material` → 拿到 `thumb_media_id`
 4. 标题 + HTML + `thumb_media_id` 经 relay `/draft` 创建草稿
+
+贴图（newspic）：
+1. `--images` 的每张图经 relay `/material` 上传 → 按顺序拿到永久 `media_id`
+2. 正文 Markdown 转纯文本（去图片/代码块/强调符号）
+3. `article_type=newspic` + `image_media_ids` 经 relay `/draft` 创建草稿
