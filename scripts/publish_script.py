@@ -313,7 +313,10 @@ def _run_delete(args):
             s = line.strip()
             if not s or s.startswith("#"):
                 continue
-            ids.append(s)
+            # 支持行尾注释：`media_id  # 备注`
+            s = s.split("#", 1)[0].strip()
+            if s:
+                ids.append(s)
     ids = [i for i in ids if i]
     if not ids:
         print("[delete] 没有可删除的 media_id", file=sys.stderr)

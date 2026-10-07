@@ -25,6 +25,18 @@ python scripts/publish_script.py --real --article X.md --cover Y.png --titles-md
 
 正文插图：在 `article.md` 写 `![](img/body1.png)`，脚本自动经 relay 上传替换。
 
+## 贴图（图片消息 newspic）
+
+首张图即封面，不需要 `--cover`；正文自动转纯文本（贴图不支持 HTML 与正文插图）。
+
+```bash
+# --images 可给目录（按文件名排序）、逗号分隔的多个路径，或多个参数；最多 20 张
+python scripts/publish_script.py --real --article X.md --titles-md T.md \
+  --type newspic --images img/
+```
+
+不传 `--type` 时默认 `news`（图文），行为与旧版一致。
+
 ## 删除草稿
 
 ```bash
